@@ -1,4 +1,4 @@
-/*! jefframos 09-01-2015 */
+/*! jefframos 13-01-2015 */
 function rgbToHsl(r, g, b) {
     r /= 255, g /= 255, b /= 255;
     var h, s, max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
@@ -83,8 +83,8 @@ function testMobile() {
 
 function update() {
     requestAnimFrame(update), meter.tickStart();
-    var tempRation = window.innerHeight / windowHeight, ratio = resizeProportional ? tempRation < window.innerWidth / realWindowWidth ? tempRation : window.innerWidth / realWindowWidth : 1;
-    windowWidthVar = realWindowWidth * ratio, windowHeightVar = realWindowHeight * ratio, 
+    var tempRation = window.innerHeight / windowHeight, ratioRez = resizeProportional ? tempRation < window.innerWidth / realWindowWidth ? tempRation : window.innerWidth / realWindowWidth : 1;
+    windowWidthVar = realWindowWidth * ratioRez * ratio, windowHeightVar = realWindowHeight * ratioRez * ratio, 
     windowWidthVar > realWindowWidth && (windowWidthVar = realWindowWidth), windowHeightVar > realWindowHeight && (windowHeightVar = realWindowHeight), 
     renderer.view.style.width = windowWidthVar + "px", renderer.view.style.height = windowHeightVar + "px", 
     APP.update(), renderer.render(APP.stage), meter.tick();
@@ -349,7 +349,7 @@ var Application = AbstractApplication.extend({
     },
     update: function() {
         this.getPosition().y > windowHeight && this.velocity.y > 0 ? this.velocity.y = 0 : this.getPosition().y < 0 && this.velocity.y < 0 && (this.velocity.y = 0), 
-        this._super(), this.getPosition().x > windowWidth && this.preKill();
+        this._super(), this.getPosition().x > windowWidth + 50 && this.preKill();
     },
     destroy: function() {
         this._super();
@@ -369,12 +369,6 @@ var Application = AbstractApplication.extend({
         this._super();
     },
     build: function() {
-        function motion(event) {
-            null !== event.accelerationIncludingGravity.x && (self.accelerometer.x = parseFloat(event.accelerationIncludingGravity.x.toFixed(2)) / 10, 
-            self.accelerometer.y = parseFloat(event.accelerationIncludingGravity.y.toFixed(2)) / 10, 
-            self.accelerometer.z = parseFloat(event.accelerationIncludingGravity.z.toFixed(2)) / 10, 
-            self.red.velocity.y = 5 * (self.accelerometer.y + .5) * -1, self.textAcc.setText("Accelerometer: \n" + self.accelerometer.x + "\n, " + self.accelerometer.y + "\n, " + self.accelerometer.z));
-        }
         this._super();
         var assetsToLoader = [ "_dist/img/ease.png", "_dist/img/UI/simpleButtonOver.png", "_dist/img/spritesheet/red/red.json", "_dist/img/UI/simpleButtonUp.png" ];
         assetsToLoader.length > 0 ? (this.loader = new PIXI.AssetLoader(assetsToLoader), 
@@ -382,8 +376,6 @@ var Application = AbstractApplication.extend({
             font: "20px Arial"
         }), this.addChild(this.textAcc), this.textAcc.position.y = 50, this.textAcc.position.x = 50, 
         this.accelerometer = {};
-        var self = this;
-        window.DeviceMotionEvent ? window.addEventListener("devicemotion", motion, !1) : alert("DeviceMotionEvent is not supported");
     },
     onProgress: function() {
         this._super();
@@ -397,26 +389,44 @@ var Application = AbstractApplication.extend({
         this.red = new Red(), this.red.build(this), this.addChild(this.red), this.red.setPosition(windowWidth / 2, windowHeight / 2);
         var self = this;
         this.buttonHurt = new DefaultButton("_dist/img/UI/simpleButtonUp.png", "_dist/img/UI/simpleButtonOver.png"), 
-        this.buttonHurt.build(130), this.buttonHurt.setPosition(50, windowHeight / 2 + 60), 
+        this.buttonHurt.build(130), this.buttonHurt.setPosition(50, windowHeight / 2 + 30), 
         this.addChild(this.buttonHurt), this.buttonHurt.addLabel(new PIXI.Text("Hurt", {
             font: "20px Arial"
         }), 5, 5), this.buttonHurt.clickCallback = function() {
             self.red.spritesheet.play("hurt");
         }, this.add = new DefaultButton("_dist/img/UI/simpleButtonUp.png", "_dist/img/UI/simpleButtonOver.png"), 
-        this.add.build(130), this.add.setPosition(50, windowHeight / 2 + 120), this.addChild(this.add), 
+        this.add.build(130), this.add.setPosition(50, windowHeight / 2 + 90), this.addChild(this.add), 
         this.add.addLabel(new PIXI.Text("Add Entity", {
             font: "20px Arial"
         }), 5, 5), this.add.clickCallback = function() {
             var red = new Red();
             red.build(), red.setPosition(0, windowHeight * Math.random()), self.addChild(red), 
             red.velocity.x = 1;
+        }, this.btnBenchmark = new DefaultButton("_dist/img/UI/simpleButtonUp.png", "_dist/img/UI/simpleButtonOver.png"), 
+        this.btnBenchmark.build(130), this.btnBenchmark.setPosition(50, windowHeight / 2 + 150), 
+        this.addChild(this.btnBenchmark), this.btnBenchmark.addLabel(new PIXI.Text("Benchmark", {
+            font: "20px Arial"
+        }), 5, 5), this.btnBenchmark.clickCallback = function() {
+            self.benchmark();
         }, possibleFullscreen() && (this.fullScreen = new DefaultButton("_dist/img/UI/simpleButtonUp.png", "_dist/img/UI/simpleButtonOver.png"), 
-        this.fullScreen.build(130), this.fullScreen.setPosition(50, windowHeight / 2 + 180), 
+        this.fullScreen.build(130), this.fullScreen.setPosition(50, windowHeight / 2 + 210), 
         this.addChild(this.fullScreen), this.fullScreen.addLabel(new PIXI.Text("Full Screen", {
             font: "20px Arial"
         }), 5, 5), this.fullScreen.clickCallback = function() {
             fullscreen();
-        });
+        }), this.initBench = !1;
+    },
+    benchmark: function() {
+        function addEntity() {
+            var red = new Red();
+            red.build(), red.setPosition(-20, windowHeight * Math.random()), self.addChild(red), 
+            red.velocity.x = 1, self.accBench++, self.accBench > 300 && (self.initBench = !1, 
+            clearInterval(self.benchInterval));
+        }
+        if (!this.initBench) {
+            var self = this;
+            this.initBench = !0, this.accBench = 0, this.benchInterval = setInterval(addEntity, 50);
+        }
     }
 }), FirebaseSocket = SmartSocket.extend({
     init: function(url) {
@@ -484,7 +494,7 @@ var Application = AbstractApplication.extend({
 testMobile() && (windowWidth = window.innerWidth, windowHeight = window.innerHeight, 
 realWindowWidth = windowWidth, realWindowHeight = windowHeight);
 
-var renderer, windowWidthVar = window.innerWidth, windowHeightVar = window.innerHeight, renderer = PIXI.autoDetectRenderer(realWindowWidth, realWindowHeight, null, !1, !0);
+var windowWidthVar = window.innerWidth, windowHeightVar = window.innerHeight, renderer = PIXI.autoDetectRenderer(realWindowWidth, realWindowHeight, null, !1, !0);
 
 document.body.appendChild(renderer.view), renderer.view.style.width = windowWidth + "px", 
 renderer.view.style.height = windowHeight + "px";
@@ -493,7 +503,7 @@ var APP;
 
 APP = new Application(), APP.build(), APP.show();
 
-var initialize = function() {
+var ratio = 1, initialize = function() {
     requestAnimFrame(update);
 };
 

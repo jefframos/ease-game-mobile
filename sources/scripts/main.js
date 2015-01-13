@@ -17,7 +17,6 @@ if(testMobile()){
 	realWindowWidth = windowWidth;
 	realWindowHeight = windowHeight;
 }
-var renderer;
 var windowWidthVar = window.innerWidth,
 windowHeightVar = window.innerHeight;
 var renderer = PIXI.autoDetectRenderer(realWindowWidth, realWindowHeight, null, false, true);
@@ -32,13 +31,24 @@ APP = new Application();
 APP.build();
 APP.show();
 
+// var context = renderer.getContext('2d');
+// var devicePixelRatio = window.devicePixelRatio || 1;
+// var backingStoreRatio = context.webkitBackingStorePixelRatio ||
+//                     context.mozBackingStorePixelRatio ||
+//                     context.msBackingStorePixelRatio ||
+//                     context.oBackingStorePixelRatio ||
+//                     context.backingStorePixelRatio || 1;
+
+var ratio = 1;//devicePixelRatio / backingStoreRatio;
+
+
 function update() {
 	requestAnimFrame(update );
 	meter.tickStart();
 	var tempRation =  (window.innerHeight/windowHeight);
-	var ratio = resizeProportional ? tempRation < (window.innerWidth/realWindowWidth)?tempRation:(window.innerWidth/realWindowWidth) : 1;
-	windowWidthVar = realWindowWidth * ratio;
-	windowHeightVar = realWindowHeight * ratio;
+	var ratioRez = resizeProportional ? tempRation < (window.innerWidth/realWindowWidth)?tempRation:(window.innerWidth/realWindowWidth) : 1;
+	windowWidthVar = realWindowWidth * ratioRez * ratio;
+	windowHeightVar = realWindowHeight * ratioRez * ratio;
 	//proportional
 	if(windowWidthVar > realWindowWidth)
 	{

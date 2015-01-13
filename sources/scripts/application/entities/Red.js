@@ -38,7 +38,7 @@ var Red = SpritesheetEntity.extend({
 		// 	this.velocity.y = this.defaultVel * this.screen.acelerometer.y;
 		// }
 		
-		if(this.getPosition().x > windowWidth){
+		if(this.getPosition().x > windowWidth + 50){
 			this.preKill();
 		}
 	},
